@@ -16,4 +16,4 @@
 ## StickModel
 > Model
 
-## Customization
+## Easy Customization
