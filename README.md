@@ -8,7 +8,15 @@
 - StickModel: Stick of flame.
 
 ## Lighter
-> Visualization
+> Handle the Visualization
+>
+>It's an EventListener can handle multiple Events.
+
+```python
+import lighter
+class PlotLighter(Lighter): 
+    
+```
 
 ## CoalTrainer
 > Training
