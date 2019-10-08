@@ -13,9 +13,10 @@
 >It's an EventListener can handle multiple Events.
 
 ```python
-import lighter
-class PlotLighter(Lighter): 
-    
+from lighter import lighters
+from lighter.events import on
+class PlotLighter(lighters.Lighter): 
+    @on()
 ```
 
 ## CoalTrainer
