@@ -6,7 +6,7 @@ from . import StickModel
 from . import BaseTrainer
 
 
-class CoalTrainer(BaseTrainer):  # TODO replace logger with Events
+class CoalTrainer(BaseTrainer):
 
     def fit(
             self,
