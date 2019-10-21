@@ -1,5 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
+
+from lighter.coal_and_stick.trainer_events import *
 from . import StickModel
 from . import BaseTrainer
 
@@ -13,28 +15,40 @@ class CoalTrainer(BaseTrainer):  # TODO replace logger with Events
             data_loader: DataLoader,
             test_loader: DataLoader
     ):
-        # before fit (model, epochs)
+        # before fit(model, epochs)
+        self.dispatch(BeforeFit(self, model, epochs))
+
         for epoch in range(epochs):
             # before epoch(epoch)
+            self.dispatch(BeforeEpoch(self, epoch))
 
-            # before train batch(length of train_batch)
+            # before training batch(length of batches)
+            self.dispatch(BeforeTrainBatch(self, len(data_loader)))
             for batch_info in self._train_one_epoch(model, data_loader):
-                pass  # train batch (batch_info)
+                # training batch(batch_info)
+                self.dispatch(TrainingBatch(self, batch_info))
             # after train batch
+            self.dispatch(AfterTrainBatch(self))
 
-            # before evaluating train_data(length of train_batch, length of train_dataset)
+            # before evaluating train_data(length of test_batch, length of test_dataset)
+            self.dispatch(BeforeEvaluateTrainSet(self, len(data_loader), len(data_loader.dataset)))
             for batch_info in model.evaluate(data_loader):
-                pass  # evaluating train_data(batch_info)
+                self.dispatch(EvaluatingTrainSet(self, batch_info))  # evaluating train_data(batch_info)
             # after evaluating train_data
+            self.dispatch(AfterEvaluateTrainSet(self))
 
             # before evaluating test_data(length of test_batch, length of test_dataset)
+            self.dispatch(BeforeEvaluateTestSet(self, len(data_loader), len(data_loader.dataset)))
             for batch_info in model.evaluate(test_loader):
-                pass  # evaluating test_data(batch_info)
+                self.dispatch(EvaluatingTestSet(self, batch_info))  # evaluating test_data(batch_info)
             # after evaluating test_data
+            self.dispatch(AfterEvaluateTestSet(self))
 
             # after epoch
+            self.dispatch(AfterEpoch(self))
 
         # after fit
+        self.dispatch(AfterFit(self))
 
     @torch.no_grad()
     def evaluate(
@@ -48,7 +62,7 @@ class CoalTrainer(BaseTrainer):  # TODO replace logger with Events
             data, target = data.to(model.device), target.to(model.device)
             predict = model(data)
             loss = model.loss_fn(predict, target)
-            yield batch_id, data, predict, loss, target  # TODO refactor with class "BatchInfo"
+            yield BatchInfo(batch_id, data, predict, loss, target)
 
     @staticmethod
     def _train_one_epoch(
@@ -66,4 +80,4 @@ class CoalTrainer(BaseTrainer):  # TODO replace logger with Events
             loss.backward()
 
             model.optimizer.step()
-            yield batch_id, data, predict, loss, target
+            yield BatchInfo(batch_id, data, predict, loss, target)
